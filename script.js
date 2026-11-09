@@ -1,8 +1,14 @@
 const $ = (id) => document.getElementById(id);
 
-/* 9:16 (쇼츠) 고정 캔버스 450x800 을 화면에 맞춰 확대/축소 */
-function fit() { document.documentElement.style.setProperty("--s", Math.min(innerWidth / 450, innerHeight / 800)); }
-addEventListener("resize", fit); fit();
+/* 화면 맞춤: 논리 높이 800 고정. 아이패드 등 넓은 화면은 가로를 넓게 쓰고(와이드), 📱 버튼으로 9:16 고정(쇼츠 녹화용) 전환 */
+let wideMode = Math.min(innerWidth, innerHeight) >= 700 && matchMedia("(pointer:coarse)").matches;
+try { const v = localStorage.getItem("wide"); if (v !== null) wideMode = v === "1"; } catch (e) {}
+function fit() {
+  const vw = innerWidth, vh = innerHeight, W = wideMode ? Math.max(450, Math.min(820, vw / vh * 800)) : 450, st = document.documentElement.style;
+  st.setProperty("--w", W + "px"); st.setProperty("--s", Math.min(vw / W, vh / 800));
+  const b = document.getElementById("fitBtn"); if (b) b.textContent = wideMode ? "📱" : "⛶";
+}
+addEventListener("resize", fit); addEventListener("orientationchange", () => setTimeout(fit, 200)); fit();
 const introScreen = $("introScreen"), storyScreen = $("storyScreen"),
       endingScreen = $("endingScreen"), creditsScreen = $("creditsScreen");
 
@@ -160,6 +166,8 @@ const bgm = (() => {
 })();
 document.addEventListener("visibilitychange", () => { if (ac) document.hidden ? ac.suspend() : ac.resume(); });
 $("muteBtn").addEventListener("click", () => bgm.toggle());
+$("fitBtn").addEventListener("click", () => { wideMode = !wideMode; try { localStorage.setItem("wide", wideMode ? "1" : "0"); } catch (e) {} fit(); });
+fit();
 
 function vibrate(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
 function flash(cls) {

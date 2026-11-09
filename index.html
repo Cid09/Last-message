@@ -14,17 +14,24 @@
     <div class="mood"><i class="m-glow"></i><i class="m-motes"></i><i class="m-rain"></i></div>
     <header class="topbar">
       <div class="brand"><span class="brand-mark">✉</span><span>LAST MESSAGE</span></div>
-      <div class="tb-right"><div class="chapter" id="chapter">PROLOGUE · 01</div><button class="mute-btn" id="muteBtn" aria-label="소리 켜기/끄기">🔊</button></div>
+      <div class="tb-right"><div class="chapter" id="chapter">PROLOGUE · 01</div><button class="mute-btn" id="fitBtn" aria-label="화면 비율 전환 (와이드/9:16)">📱</button><button class="mute-btn" id="muteBtn" aria-label="소리 켜기/끄기">🔊</button></div>
     </header>
 
     <section class="intro-screen" id="introScreen" aria-label="마지막 메시지 게임 시작 화면">
       <img class="intro-art" src="assets/title-vertical.jpg" alt="비 오는 밤 휴대전화를 바라보는 학생">
+      <div class="toasts" aria-hidden="true">
+        <div class="toast t1"><i>💬</i><div><b>민수</b><span>ㅋㅋㅋ 이거 봤냐</span></div></div>
+        <div class="toast t2"><i>📹</i><div><b>단체방 · 99+</b><span>[영상] 조회 8,911회</span></div></div>
+        <div class="toast t3"><i>💬</i><div><b>하은</b><span>…그건 좀 아닌 것 같은데</span></div></div>
+      </div>
       <div class="intro-body">
-        <p class="eyebrow">선택형 스토리 · 당신의 선택</p>
-        <h1 class="intro-title">마지막<br><em>메시지</em></h1>
+        <p class="eyebrow"><span class="dot"></span>새 메시지가 도착했습니다</p>
+        <h1 class="intro-title">마지막<br><em data-text="메시지">메시지</em></h1>
         <p class="intro-tag">…지금, 당신의 <b>선택</b>이<br>누군가의 <b>하루</b>를 바꿀 수 있어요.</p>
         <button class="start-btn" id="startBtn">▶ 게임 시작</button>
+        <p class="intro-hint">🔊 소리를 켜고 플레이하세요 · 약 50초</p>
       </div>
+      <div class="intro-rain"></div><div class="intro-flash"></div>
     </section>
 
     <section class="story-screen hidden" id="storyScreen">

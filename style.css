@@ -289,3 +289,53 @@ body { padding:0; display:block; min-height:0; background:#000; }
 .timer-wrap, .timer-text { display:none; }
 .hud-row { justify-content:flex-end; margin-top:0; }
 .cs-fade { transition:opacity .5s; }
+
+/* 와이드(아이패드) 대응: 가로폭은 JS가 --w 로 지정 */
+#stage, .game-shell { width:var(--w,450px); }
+.intro-art { height:360px; object-position:50% 0; }
+
+/* ===== 로비(인트로) 연출 강화 ===== */
+.intro-screen { background:#0b0f1e; }
+.intro-screen::before { content:""; position:absolute; inset:0; z-index:0; animation:breathe 5s ease-in-out infinite alternate;
+  background:radial-gradient(ellipse at 22% 72%, rgba(150,90,255,.3), transparent 56%), radial-gradient(ellipse at 85% 28%, rgba(255,90,170,.14), transparent 50%); }
+@keyframes breathe { from { opacity:.5; } to { opacity:1; } }
+.intro-screen::after { content:""; position:absolute; inset:0; z-index:2; pointer-events:none; opacity:.55; animation:motes 18s linear infinite;
+  background-image:radial-gradient(circle, rgba(200,170,255,.9) 0 1.4px, transparent 2.2px), radial-gradient(circle, rgba(255,150,210,.7) 0 1px, transparent 2px); background-size:113px 149px, 67px 97px; }
+.intro-art { z-index:1; transform-origin:50% 0; animation:kb 16s ease-in-out infinite alternate; }
+@keyframes kb { from { transform:scale(1.02); } to { transform:scale(1.13) translateX(-12px); } }
+.intro-body { z-index:3; bottom:62px; }
+.intro-body > * { animation:up .8s cubic-bezier(.2,.8,.2,1) both; }
+.intro-body > :nth-child(1) { animation-delay:.1s; } .intro-body > :nth-child(2) { animation:titleIn 1.1s cubic-bezier(.2,.8,.2,1) .25s both; }
+.intro-body > :nth-child(3) { animation-delay:.6s; } .intro-body > :nth-child(4) { animation-delay:.85s; } .intro-body > :nth-child(5) { animation-delay:1.1s; }
+@keyframes up { from { opacity:0; transform:translateY(18px); } }
+@keyframes titleIn { from { opacity:0; transform:translateY(26px); filter:blur(10px); letter-spacing:6px; } }
+.eyebrow { display:flex; align-items:center; gap:8px; }
+.eyebrow .dot { width:8px; height:8px; border-radius:50%; background:#ff4d6d; box-shadow:0 0 10px #ff4d6d; animation:blink 1s infinite; }
+.intro-title em { position:relative; display:inline-block; }
+.intro-title em::before, .intro-title em::after { content:attr(data-text); position:absolute; left:0; top:0; opacity:0; -webkit-text-fill-color:currentcolor; }
+.intro-title em::before { color:#72d9e8; animation:glA 5s infinite; }
+.intro-title em::after { color:#ff4d8d; animation:glB 5s infinite; }
+@keyframes glA { 0%,90%,100% { opacity:0; } 91% { opacity:.9; transform:translate(-4px,2px); clip-path:inset(0 0 55% 0); } 94% { opacity:.9; transform:translate(3px,-2px); clip-path:inset(45% 0 0 0); } 96% { opacity:0; } }
+@keyframes glB { 0%,90%,100% { opacity:0; } 92% { opacity:.9; transform:translate(4px,-1px); clip-path:inset(40% 0 0 0); } 95% { opacity:.9; transform:translate(-3px,2px); clip-path:inset(0 0 50% 0); } 97% { opacity:0; } }
+.start-btn { position:relative; overflow:hidden; }
+.start-btn::after { content:""; position:absolute; top:0; left:-60%; width:40%; height:100%; transform:skewX(-20deg); animation:shine 3.2s infinite;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); }
+@keyframes shine { 0%,55% { left:-60%; } 100% { left:140%; } }
+.intro-hint { margin:14px 0 0; text-align:center; font-size:12px; color:#8d97b8; letter-spacing:.3px; }
+
+/* 알림 배너 (스마트폰 푸시처럼 위에서 내려옴) */
+.toasts { position:absolute; top:62px; left:0; right:0; height:62px; z-index:4; pointer-events:none; }
+.toast { position:absolute; left:0; right:0; margin:0 auto; width:min(390px, calc(100% - 32px)); display:flex; gap:12px; align-items:center; padding:11px 14px;
+  border-radius:16px; background:rgba(28,34,60,.82); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.12); box-shadow:0 8px 28px rgba(0,0,0,.45);
+  opacity:0; transform:translateY(-130%); animation:banner 9s infinite; }
+.toast i { font-style:normal; font-size:20px; width:36px; height:36px; display:grid; place-items:center; border-radius:10px; background:rgba(255,255,255,.1); }
+.toast b { display:block; font-size:12px; color:#fff; margin-bottom:2px; } .toast span { font-size:13px; color:#c9d0e8; }
+.t2 { animation-delay:3s; } .t3 { animation-delay:6s; } .t2 b { color:#ff8a9b; }
+@keyframes banner { 0% { opacity:0; transform:translateY(-130%); } 5%,29% { opacity:1; transform:translateY(0); } 35%,100% { opacity:0; transform:translateY(-130%); } }
+
+/* 빗줄기 + 번개 */
+.intro-rain { position:absolute; inset:-200px 0 0; z-index:5; pointer-events:none; opacity:.65; animation:rain .6s linear infinite;
+  background:repeating-linear-gradient(100deg, rgba(170,195,255,.17) 0 1px, transparent 1px 16px); background-size:220px 220px; }
+.intro-flash { position:absolute; inset:0; z-index:6; pointer-events:none; opacity:0; background:rgba(200,215,255,.6); animation:bolt 8s infinite; }
+@keyframes bolt { 0%,86%,100% { opacity:0; } 87% { opacity:.75; } 88.5% { opacity:0; } 90% { opacity:.4; } 93% { opacity:0; } }
+.intro-art { -webkit-mask-image:linear-gradient(#000 48%, transparent 95%); mask-image:linear-gradient(#000 48%, transparent 95%); }
