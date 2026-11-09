@@ -6,7 +6,7 @@ addEventListener("resize", fit); fit();
 const introScreen = $("introScreen"), storyScreen = $("storyScreen"),
       endingScreen = $("endingScreen"), creditsScreen = $("creditsScreen");
 
-const TIME_LIMIT = 7000;      // 장면당 제한 시간 (4장면 → 50초 이내)
+const TIME_LIMIT = 6000;      // 장면당 제한 시간 (4장면 → 50초 이내)
 const FEEDBACK_MS = 1500;     // 선택 후 자동 진행 대기
 
 let lightAdj = 0, history = [], flags, sceneIndex, runId = 0, views, viewTick, timerTick, sceneStart,
@@ -17,8 +17,10 @@ const scenes = [
     label: "SCENE 01", title: "21:12 단체방 폭발", icon: "🌧️", idle: 2,
     text: "밤 9시 12분.\n반 단체방이 갑자기 폭발한다.",
     chat: [
-      ["민수", "전학생 발표 영상 ㅋㅋㅋㅋㅋ"],
+      ["민수", "야 이거 봤냐ㅋㅋㅋ 전학생 발표 영상"],
       ["지훈", "풀버전 있음. 올린다?"],
+      ["민수", "ㅇㅇ 올려 올려ㅋㅋㅋㅋ"],
+      ["지훈", "[동영상] 서연_발표_망함.mp4"],
       ["하은", "…그건 좀 아닌 것 같은데"]
     ],
     choices: [
@@ -31,7 +33,10 @@ const scenes = [
     label: "SCENE 02", title: "도착한 DM", icon: "📩", idle: 2,
     text: (f) => f.joined ? "21:40.\n아까 웃었던 게 계속 마음에 걸린다.\n그때, 서연에게서 DM이 왔다." : f.supported ? "21:40.\n네가 말린 걸 서연도 알았나 보다.\n서연에게서 DM이 왔다." : "21:40.\n방을 나왔는데도 마음이 불편하다.\n서연에게서 DM이 왔다.",
     chat: (f) => [
-      ["서연", f.supported ? "아까 말려준 거, 너 맞지?" : "단체방 영상… 봤어?"],
+      ["서연", f.joined ? "너도 단체방에 있었지…?" : f.supported ? "아까 말려준 거, 너 맞지?" : "단체방 영상… 봤어?"],
+      ["서연", "나 오늘 발표하다가 말을 더듬었거든."],
+      ["서연", "전학 와서 처음 한 발표였는데…"],
+      ["서연", "그게 계속 돌아다니는 걸 보니까"],
       ["서연", "내일 학교 가기가 무서워."]
     ],
     choices: [
@@ -45,7 +50,10 @@ const scenes = [
     text: (f) => f.joined ? "다음 날 아침.\n영상은 학교 전체로 퍼졌다.\n그리고 모두가 안다. 처음에 웃은 사람 중에 네가 있었다는 걸." : "다음 날 아침.\n영상은 이미 학교 전체로 퍼졌다.",
     chat: (f) => [
       ["민수", f.joined ? "너도 웃었잖아ㅋㅋ 이제 와서 뭘" : "옆 반도 다 봤대ㅋㅋ"],
-      ["서연", "내려 달라고 했는데 아무도 안 들어줘…"]
+      ["지훈", "조회수 3천 넘음 ㄷㄷ 서연 밈 됐다"],
+      ["하은", "…진짜 너무한 거 아냐?"],
+      ["서연", "영상 내려 달라고 했는데 아무도 안 들어줘."],
+      ["서연", "쉬는 시간마다 화장실에 숨어 있어…"]
     ],
     choices: [
       { text: "친구들에게 공유 중단을 요청한다.", set: { supported: true }, spread: -200, feedback: "확산을 멈추려는 행동은 중요해요." },
@@ -56,8 +64,10 @@ const scenes = [
   {
     label: "SCENE 04", title: "마지막 선택", icon: "🌅", idle: 2,
     text: (f) => f.reported ? "점심시간.\n선생님이 상황을 알게 되셨다.\n서연이 조용히 묻는다. “그래도… 아직 남아 있어.”" : "점심시간.\n서연이 조용히 묻는다.\n“아직 영상이 남아 있어. 어떡하지?”",
-    chat: [
-      ["서연", "혼자서는 못 하겠어."],
+    chat: (f) => [
+      ["서연", f.reported ? "선생님이 오셨는데, 어디서부터 말해야 할지 모르겠어." : "혼자서는 못 하겠어."],
+      ["서연", "누가 알게 되면 더 이상해질까 봐 무서워."],
+      ["서연", "…근데 너라면, 말해도 될 것 같아서."],
       ["나", "…"]
     ],
     choices: [
@@ -218,8 +228,8 @@ async function renderScene() {
   for (const [name, message] of chatArr || []) {
     if (name !== "나") {
       const tp = document.createElement("div"); tp.className = "chat-bubble other typing"; tp.innerHTML = "<i></i><i></i><i></i>";
-      chat.appendChild(tp); await wait(300); if (id !== runId) return; tp.remove();
-    } else { await wait(180); if (id !== runId) return; }
+      chat.appendChild(tp); await wait(Math.min(800, 300 + message.length * 16)); if (id !== runId) return; tp.remove();
+    } else { await wait(350); if (id !== runId) return; }
     const b = document.createElement("div");
     b.className = `chat-bubble ${name === "나" ? "me" : "other"}`;
     b.innerHTML = `<span class="chat-name"></span><span class="chat-message"></span>`;
@@ -227,6 +237,7 @@ async function renderScene() {
     b.querySelector(".chat-message").textContent = message;
     chat.appendChild(b);
     beep(name === "나" ? 520 : 880, .06, "sine", .04); vibrate(30);
+    await wait(220); if (id !== runId) return;
   }
   await wait(250); if (id !== runId) return;
 

@@ -279,3 +279,8 @@ body { padding:0; display:block; min-height:0; background:#000; }
 /* 소리 버튼 */
 .tb-right { display:flex; align-items:center; gap:12px; }
 .mute-btn { width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:rgba(255,255,255,.06); color:#fff; font-size:14px; padding:0; line-height:1; }
+
+/* 대화창: 고정 높이, 새 메시지가 오면 위로 스크롤되는 느낌 */
+.chat-area { height:190px; overflow:hidden; justify-content:flex-end; margin:12px 0 4px;
+  -webkit-mask-image:linear-gradient(transparent, #000 16%); mask-image:linear-gradient(transparent, #000 16%); }
+.chat-area.hidden { display:none; }
