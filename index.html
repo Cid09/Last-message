@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101426">
+  <title>마지막 메시지 | 선택형 스토리 게임</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+  <main class="game-shell">
+    <div id="flash"></div>
+    <div class="mood"><i class="m-glow"></i><i class="m-motes"></i><i class="m-rain"></i></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">✉</span><span>LAST MESSAGE</span></div>
+      <div class="chapter" id="chapter">PROLOGUE · 01</div>
+    </header>
+
+    <section class="intro-screen" id="introScreen" aria-label="마지막 메시지 게임 시작 화면">
+      <img class="intro-art" src="assets/title-vertical.jpg" alt="비 오는 밤 휴대전화를 바라보는 학생">
+      <div class="intro-body">
+        <p class="eyebrow">선택형 스토리 · 50초</p>
+        <h1 class="intro-title">마지막<br><em>메시지</em></h1>
+        <p class="intro-tag">…지금, 당신의 <b>선택</b>이<br>누군가의 <b>하루</b>를 바꿀 수 있어요.</p>
+        <button class="start-btn" id="startBtn">▶ 게임 시작</button>
+      </div>
+    </section>
+
+    <section class="story-screen hidden" id="storyScreen">
+      <div class="scene-banner" id="sceneBanner">
+        <span class="scene-icon" id="sceneIcon">🌧️</span>
+        <div><span class="scene-label" id="sceneLabel">SCENE 01</span><h2 id="sceneTitle">평범한 저녁</h2></div>
+      </div>
+      <div class="hud" id="hud">
+        <div class="timer-wrap"><div class="timer-fill" id="timerFill"></div></div>
+        <div class="hud-row">
+          <span class="timer-text">⏱ <b id="timerText">8.0</b>s</span>
+          <span class="views">📹 영상 조회 <b id="viewCount">0</b>회</span>
+        </div>
+      </div>
+      <div class="story-card">
+        <div class="story-text" id="storyText" aria-live="polite"></div>
+        <div class="chat-area hidden" id="chatArea"></div>
+        <div class="choices" id="choices"></div>
+        <div class="feedback hidden" id="feedback" aria-live="polite"></div>
+      </div>
+      <footer class="story-footer">
+        <span id="progressText">STORY 1 / 4</span>
+        <span>망설이면 영상은 계속 퍼집니다</span>
+      </footer>
+    </section>
+
+    <section class="ending-screen hidden" id="endingScreen">
+      <div class="ending-symbol" id="endingSymbol">✦</div>
+      <p class="eyebrow" id="endingEyebrow">ENDING</p>
+      <h2 id="endingTitle">작은 용기</h2>
+      <p class="ending-quote" id="endingQuote"></p>
+      <p class="ending-description" id="endingDescription"></p>
+      <div class="ending-stats" id="endingStats"></div>
+      <div class="ending-message" id="endingMessage"></div>
+      <div class="ending-actions">
+        <button class="primary-btn" id="restartBtn">다시 플레이하기 <span>↻</span></button>
+        <button class="text-btn" id="creditsBtn">게임 메시지 보기</button>
+      </div>
+    </section>
+
+    <section class="credits-screen hidden" id="creditsScreen">
+      <p class="eyebrow">THE MESSAGE</p>
+      <h2>화면 너머에도<br><em>사람이 있습니다.</em></h2>
+      <p>온라인에서의 말과 행동도 현실의 누군가에게 영향을 줍니다.</p>
+      <ul>
+        <li>누군가를 비난하거나 조롱하는 메시지를 퍼뜨리지 않기</li>
+        <li>괴롭힘을 목격하면 혼자 해결하려 하지 말고 믿을 수 있는 어른에게 알리기</li>
+        <li>피해를 겪는 친구의 이야기를 판단하지 않고 들어주기</li>
+      </ul>
+      <button class="primary-btn" id="homeBtn">처음 화면으로 <span>↻</span></button>
+    </section>
+    <section class="cutscene hidden" id="cutscene" aria-label="엔딩 컷씬">
+      <div class="cs-sky"></div>
+      <div class="cs-phone" id="csPhone">
+        <div class="cs-head"><span id="csTitle"></span><i></i></div>
+        <div class="cs-log" id="csScreen"></div>
+      </div>
+      <p class="cs-caption" id="csCaption"></p>
+      <div class="cs-fade" id="csFade"></div>
+      <button class="cs-skip" id="csSkip">SKIP ›</button>
+    </section>
+  </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
