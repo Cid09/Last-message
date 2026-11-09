@@ -70,9 +70,11 @@ const scenes = [
 
 /* ---------- 효과 ---------- */
 let ac;
+function getAC() { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume(); return ac; }
 function beep(f = 880, d = .08, type = "sine", v = .05) {
   try {
-    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (bgm.muted()) return;
+    getAC();
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = type; o.frequency.value = f; g.gain.value = v;
     o.connect(g); g.connect(ac.destination); o.start();
@@ -80,6 +82,60 @@ function beep(f = 880, d = .08, type = "sine", v = .05) {
     o.stop(ac.currentTime + d);
   } catch (e) {}
 }
+/* ---------- BGM: 직접 생성하는 배경음악 (저작권 걱정 없음) ----------
+   어두울 땐 비 소리 + 낮은 단조 패드 + 외로운 음, 밝아질수록 장조 + 맑은 종소리 */
+const bgm = (() => {
+  let on = false, muted = false, master, filt, rainG, light = 0, tgt = 0, step = 0, nextT = 0, timer;
+  const mid = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const minor = [[57, 60, 64], [53, 57, 60], [50, 53, 57], [52, 55, 59]];
+  const major = [[60, 64, 67], [55, 59, 62], [57, 60, 64], [53, 57, 60]];
+  const note = (f, t, dur, type, vol, atk) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + atk);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(filt); o.start(t); o.stop(t + dur + .1);
+  };
+  function schedule(t) {
+    const L = light, bar = Math.floor(step / 8), ch = (L < .5 ? minor : major)[bar % 4];
+    if (step % 8 === 0) {
+      ch.forEach((m, i) => { note(mid(m + (L > .5 ? 0 : -12)), t, 5, "triangle", .04, 1.4); note(mid(m + (L > .5 ? 12 : 0)) * 1.003, t, 5, "sine", .022, 1.6); });
+      note(mid(ch[0] - 24), t, 4, "sine", .1, .06);
+    }
+    if (Math.random() < L * .6) note(mid(ch[Math.floor(Math.random() * 3)] + 12 + (Math.random() < .4 ? 12 : 0)), t, 1.6, "sine", .035, .005);
+    else if (L < .4 && step % 4 === 2 && Math.random() < .55) note(mid(ch[Math.floor(Math.random() * 3)] + 12), t, 2.4, "sine", .05, .01);
+    step++;
+  }
+  return {
+    muted: () => muted,
+    setLight: (v) => { tgt = v; },
+    toggle() {
+      muted = !muted; $("muteBtn").textContent = muted ? "🔇" : "🔊";
+      if (master) master.gain.setTargetAtTime(muted ? 0 : .8, ac.currentTime, .15);
+    },
+    start() {
+      if (on) return; on = true; getAC();
+      master = ac.createGain(); master.gain.value = 0; master.gain.setTargetAtTime(muted ? 0 : .8, ac.currentTime, 1.2);
+      filt = ac.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.value = 800; filt.connect(master); master.connect(ac.destination);
+      const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+      const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 2600; bp.Q.value = .5;
+      rainG = ac.createGain(); rainG.gain.value = 0; src.connect(bp); bp.connect(rainG); rainG.connect(master); src.start();
+      nextT = ac.currentTime + .1;
+      timer = setInterval(() => {
+        light += (tgt - light) * .06;
+        filt.frequency.setTargetAtTime(700 + light * 3800, ac.currentTime, .5);
+        rainG.gain.setTargetAtTime(.06 * Math.max(0, 1 - light * 1.4), ac.currentTime, .5);
+        while (nextT < ac.currentTime + .6) { schedule(nextT); nextT += .5; }
+      }, 150);
+    }
+  };
+})();
+document.addEventListener("visibilitychange", () => { if (ac) document.hidden ? ac.suspend() : ac.resume(); });
+$("muteBtn").addEventListener("click", () => bgm.toggle());
+
 function vibrate(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
 function flash(cls) {
   const f = $("flash");
@@ -89,7 +145,7 @@ function shake() {
   const s = document.querySelector(".game-shell");
   s.classList.remove("shake"); void s.offsetWidth; s.classList.add("shake");
 }
-function setLight(v) { document.documentElement.style.setProperty("--light", v); }
+function setLight(v) { bgm.setLight(v); document.documentElement.style.setProperty("--light", v); }
 const val = (v) => (typeof v === "function" ? v(flags) : v);
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -119,6 +175,7 @@ function show(screen) {
 function stopAll() { clearInterval(viewTick); clearInterval(timerTick); runId++; }
 
 function startGame() {
+  bgm.start();
   stopAll();
   csTimers.forEach(clearTimeout); $("cutscene").classList.add("hidden");
   flags = { supported: false, joined: false, reported: false, ignored: false };
@@ -280,6 +337,7 @@ function playCutscene(type, done) {
   const down = () => beep(140, .35, "sawtooth", .05);
   const up = (f) => () => beep(f, .25, "sine", .06);
 
+  setLight(type === "bad" ? .02 : .25);
   if (type === "bad") {
     $("csTitle").textContent = "단체방 · 99+";
     caption("그날 밤, 단체방은 멈추지 않았다.");
@@ -298,7 +356,7 @@ function playCutscene(type, done) {
     at(700, () => say("sys", "🗑 영상이 삭제되었습니다", up(660)));
     at(1700, () => say("서연", "선생님이 다 처리해 주셨어.", ping));
     at(2800, () => say("서연", "네가 먼저 말해줘서 용기 났어. 고마워.", up(784)));
-    at(3700, () => cs.classList.add("sunrise"));
+    at(3700, () => { cs.classList.add("sunrise"); setLight(1); });
     at(4200, () => say("나", "같이 가자, 학교.", ping));
     at(5200, () => say("서연", "응! 😊", up(988)));
     at(5800, () => caption("비가 그쳤다."));
