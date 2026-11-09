@@ -7,7 +7,7 @@ const introScreen = $("introScreen"), storyScreen = $("storyScreen"),
       endingScreen = $("endingScreen"), creditsScreen = $("creditsScreen");
 
 const TIME_LIMIT = 6000;      // 장면당 제한 시간 (4장면 → 50초 이내)
-const FEEDBACK_MS = 1500;     // 선택 후 자동 진행 대기
+const FEEDBACK_MS = 1100;     // 선택 후 자동 진행 대기
 
 let lightAdj = 0, history = [], flags, sceneIndex, runId = 0, views, viewTick, timerTick, sceneStart,
     gameStart, reactions, lastSec, locked;
@@ -62,7 +62,22 @@ const scenes = [
     ]
   },
   {
-    label: "SCENE 04", title: "마지막 선택", icon: "🌅", idle: 2,
+    label: "SCENE 04", title: "복도 끝에서", icon: "🚪", idle: 2,
+    text: (f) => f.reported ? "방과 후.\n선생님과 이야기를 마치고 나오는 길,\n복도 끝에 서연이 서 있다." : "방과 후.\n텅 빈 복도 끝에\n서연이 혼자 서 있다.",
+    chat: (f) => [
+      ["서연", f.joined ? "…너도 그 방에 있었지." : "…아, 너구나."],
+      ["서연", "아까 누가 내 영상을 보면서 지나갔어."],
+      ["서연", "웃으면서. 나를 모르는 척하고."],
+      ["서연", "그 웃음소리가 하루 종일 안 잊혀."]
+    ],
+    choices: [
+      { text: "“네 잘못 아니야.”라고 말해 준다.", set: { supported: true }, spread: -100, feedback: "피해자가 가장 듣고 싶은 말일 수 있어요." },
+      { text: "아무 말도 못 하고 곁에 서 있는다.", spread: 100, feedback: "말이 안 나와도, 곁에 있다는 건 전해져요." },
+      { text: "“…먼저 갈게.”라며 돌아선다.", set: { ignored: true }, spread: 300, bad: true, feedback: "서연의 시선이 등 뒤에 오래 남아요." }
+    ]
+  },
+  {
+    label: "SCENE 05", title: "마지막 선택", icon: "🌅", idle: 2,
     text: (f) => f.reported ? "점심시간.\n선생님이 상황을 알게 되셨다.\n서연이 조용히 묻는다. “그래도… 아직 남아 있어.”" : "점심시간.\n서연이 조용히 묻는다.\n“아직 영상이 남아 있어. 어떡하지?”",
     chat: (f) => [
       ["서연", f.reported ? "선생님이 오셨는데, 어디서부터 말해야 할지 모르겠어." : "혼자서는 못 하겠어."],
@@ -199,12 +214,12 @@ function startGame() {
 async function renderScene() {
   const id = ++runId, scene = scenes[sceneIndex];
   locked = true;
-  setLight(Math.max(0, Math.min(1, [0, .25, .5, .8][sceneIndex] + lightAdj)));
+  setLight(Math.max(0, Math.min(1, [0, .2, .4, .6, .85][sceneIndex] + lightAdj)));
   const card = document.querySelector(".story-card");
   card.classList.remove("scene-in"); void card.offsetWidth; card.classList.add("scene-in");
   const text = val(scene.text), chatArr = val(scene.chat);
   storyScreen.classList.remove("danger");
-  $("chapter").textContent = `${scene.label} / 04`;
+  $("chapter").textContent = `${scene.label} / 0${scenes.length}`;
   $("sceneLabel").textContent = scene.label;
   $("sceneTitle").textContent = scene.title;
   $("sceneIcon").textContent = scene.icon;
@@ -222,13 +237,13 @@ async function renderScene() {
   // 타자 효과
   for (let i = 1; i <= text.length; i++) {
     $("storyText").textContent = text.slice(0, i);
-    await wait(20); if (id !== runId) return;
+    await wait(14); if (id !== runId) return;
   }
   // 메시지 순차 등장
   for (const [name, message] of chatArr || []) {
     if (name !== "나") {
       const tp = document.createElement("div"); tp.className = "chat-bubble other typing"; tp.innerHTML = "<i></i><i></i><i></i>";
-      chat.appendChild(tp); await wait(Math.min(800, 300 + message.length * 16)); if (id !== runId) return; tp.remove();
+      chat.appendChild(tp); await wait(Math.min(650, 220 + message.length * 12)); if (id !== runId) return; tp.remove();
     } else { await wait(350); if (id !== runId) return; }
     const b = document.createElement("div");
     b.className = `chat-bubble ${name === "나" ? "me" : "other"}`;
@@ -237,9 +252,9 @@ async function renderScene() {
     b.querySelector(".chat-message").textContent = message;
     chat.appendChild(b);
     beep(name === "나" ? 520 : 880, .06, "sine", .04); vibrate(30);
-    await wait(220); if (id !== runId) return;
+    await wait(150); if (id !== runId) return;
   }
-  await wait(250); if (id !== runId) return;
+  await wait(150); if (id !== runId) return;
 
   scene.choices.forEach((choice, i) => {
     const btn = document.createElement("button");
@@ -253,25 +268,7 @@ async function renderScene() {
   startTimer(id);
 }
 
-function startTimer(id) {
-  locked = false; lastSec = 99;
-  const fill = $("timerFill");
-  void fill.offsetWidth;
-  fill.style.transition = `width ${TIME_LIMIT}ms linear`; fill.style.width = "0%";
-  sceneStart = performance.now();
-  clearInterval(timerTick);
-  timerTick = setInterval(() => {
-    if (id !== runId) return clearInterval(timerTick);
-    const left = TIME_LIMIT - (performance.now() - sceneStart);
-    $("timerText").textContent = (Math.max(left, 0) / 1000).toFixed(1);
-    if (left < 3000) {
-      storyScreen.classList.add("danger");
-      const sec = Math.ceil(left / 1000);
-      if (sec !== lastSec) { lastSec = sec; beep(300 + (3 - sec) * 120, .07, "square", .04); vibrate(40); }
-    }
-    if (left <= 0) { clearInterval(timerTick); choose(scenes[sceneIndex].idle, true); }
-  }, 100);
-}
+function startTimer(id) { locked = false; sceneStart = performance.now(); }  // 시간제한 없음
 
 function choose(i, timedOut) {
   if (locked) return; locked = true;
@@ -328,7 +325,7 @@ function playCutscene(type, done) {
     csTimers.forEach(clearTimeout); cs.classList.add("hidden"); done();
   };
   $("csSkip").onclick = finish;
-  const at = (ms, fn) => csTimers.push(setTimeout(() => { if (!finished) fn(); }, ms));
+  const at = (ms, fn) => csTimers.push(setTimeout(() => { if (!finished) fn(); }, ms * .68));  // 쇼츠용 압축
   const caption = (t) => { cap.textContent = t; cap.className = "cs-caption"; void cap.offsetWidth; cap.className = "cs-caption on"; };
   const say = (who, msg, snd) => {
     const b = document.createElement("div");
@@ -405,7 +402,7 @@ function revealEnding(type) {
     `<div><b>${total}s</b><span>플레이 시간</span></div>` +
     `<div><b>${views.toLocaleString()}</b><span>최종 영상 조회</span></div>` +
     `<div><b>${avg}s</b><span>평균 결정 속도</span></div>` +
-    `<div><b>${timeouts}</b><span>망설인 횟수</span></div>` +
+    `<div><b>${history.filter(h => h === "good").length}/${history.length}</b><span>용기 낸 선택</span></div>` +
     `<div class="recap"><span>선택 기록</span>${history.map(h => `<i class="d ${h}"></i>`).join("")}</div>`;
   flash(type === "bad" ? "alert" : "good");
   beep(type === "good" ? 880 : 220, .4, "sine", .06);

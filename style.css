@@ -284,3 +284,8 @@ body { padding:0; display:block; min-height:0; background:#000; }
 .chat-area { height:190px; overflow:hidden; justify-content:flex-end; margin:12px 0 4px;
   -webkit-mask-image:linear-gradient(transparent, #000 16%); mask-image:linear-gradient(transparent, #000 16%); }
 .chat-area.hidden { display:none; }
+
+/* 시간제한 제거: 타이머 숨김, 조회수만 표시 */
+.timer-wrap, .timer-text { display:none; }
+.hud-row { justify-content:flex-end; margin-top:0; }
+.cs-fade { transition:opacity .5s; }
