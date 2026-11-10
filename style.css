@@ -339,3 +339,34 @@ body { padding:0; display:block; min-height:0; background:#000; }
 .intro-flash { position:absolute; inset:0; z-index:6; pointer-events:none; opacity:0; background:rgba(200,215,255,.6); animation:bolt 8s infinite; }
 @keyframes bolt { 0%,86%,100% { opacity:0; } 87% { opacity:.75; } 88.5% { opacity:0; } 90% { opacity:.4; } 93% { opacity:0; } }
 .intro-art { -webkit-mask-image:linear-gradient(#000 48%, transparent 95%); mask-image:linear-gradient(#000 48%, transparent 95%); }
+
+/* ===== 메신저 UI ===== */
+.chat-head { display:flex; align-items:center; gap:9px; padding:0 2px 8px; margin-top:12px; border-bottom:1px solid var(--line); }
+.chat-head.hidden { display:none; }
+.chat-head .av { width:30px; height:30px; border-radius:12px; flex:none; display:grid; place-items:center; font-size:13px; font-weight:800; color:#0d1122; }
+.ch-t b { display:block; font-size:13px; color:#fff; } .ch-t small { font-size:10.5px; color:#9aa6c4; }
+.ch-ic { margin-left:auto; color:#6f7a99; font-size:13px; letter-spacing:4px; }
+.chat-area { height:172px; margin:8px 0 4px; gap:5px; }
+.chat-area .msg { display:flex; align-items:flex-end; gap:6px; animation:pop .28s ease-out; }
+.chat-area .msg.me { justify-content:flex-end; }
+.chat-area .msg.has-react { margin-bottom:9px; }
+.chat-area .col { display:flex; flex-direction:column; align-items:flex-start; max-width:72%; position:relative; }
+.chat-area .msg.me .col { align-items:flex-end; }
+.chat-area .chat-bubble { max-width:100%; align-self:auto; animation:none; }
+.chat-area .chat-bubble.typing { width:58px; }
+.nm { font-size:11px; color:#aeb9d5; margin:2px 0 3px 2px; }
+.chat-area .av { width:28px; height:28px; border-radius:11px; flex:none; display:grid; place-items:center; font-size:12px; font-weight:800; color:#0d1122; }
+.meta { display:flex; flex-direction:column; font-size:9.5px; color:#7f8aa8; line-height:1.25; white-space:nowrap; align-items:flex-start; }
+.msg.me .meta { align-items:flex-end; } .meta em { font-style:normal; color:#ffd54a; font-weight:800; }
+.react { position:absolute; left:6px; bottom:-10px; font-size:10px; padding:1px 7px; border-radius:99px; background:#1d2542; border:1px solid var(--line); color:#dfe5ff; }
+.chat-area .cs-sys { align-self:center; margin:3px 0; }
+.vbub { padding:7px !important; } .vcard { display:flex; gap:9px; align-items:center; }
+.vthumb { width:72px; height:46px; border-radius:8px; background:linear-gradient(135deg,#46306e,#1a1f3a); display:grid; place-items:center; }
+.vthumb span { width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.88); color:#222; font-size:9px; display:grid; place-items:center; padding-left:2px; }
+.vmeta b { display:block; font-size:12px; } .vmeta small { color:#aeb9d5; font-size:10px; }
+.choice-btn.picked { display:none; }
+.chat-area { height:154px; }
+.story-text { line-height:1.65; }
+
+/* 속마음 한 줄 */
+.feedback { font-style:italic; letter-spacing:-.2px; }
