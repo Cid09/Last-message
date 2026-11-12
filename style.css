@@ -370,3 +370,84 @@ body { padding:0; display:block; min-height:0; background:#000; }
 
 /* 속마음 한 줄 */
 .feedback { font-style:italic; letter-spacing:-.2px; }
+
+/* ===== 녹화 모드: 되감기 + 엔딩 카드 ===== */
+.rewind { position:absolute; inset:0; z-index:40; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:#05060c; opacity:1; transition:opacity .35s; overflow:hidden; }
+.rewind.out { opacity:0; }
+.rewind::before { content:""; position:absolute; inset:0; background:repeating-linear-gradient(0deg, rgba(255,255,255,.07) 0 2px, transparent 2px 5px); animation:scan .25s linear infinite; }
+@keyframes scan { to { background-position:0 10px; } }
+.rw-noise { position:absolute; left:0; right:0; height:60px; top:30%; background:rgba(255,255,255,.12); filter:blur(2px); animation:track 1.1s linear infinite; }
+@keyframes track { from { top:-10%; } to { top:110%; } }
+.rw-label { position:relative; font-size:34px; font-weight:900; letter-spacing:4px; color:#fff; text-shadow:3px 0 #ff2d55, -3px 0 #00e5ff; animation:jit .12s infinite; }
+@keyframes jit { 50% { transform:translate(3px,-2px); } }
+.rw-count { position:relative; font:700 18px/1 ui-monospace, monospace; color:#ff6b81; letter-spacing:3px; }
+.rw-cap { position:relative; margin:22px 0 0; font-size:20px; font-weight:800; color:#fff; }
+.rewind.hidden, .endcard.hidden { display:none; }
+.endcard { position:absolute; inset:0; z-index:45; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 28px 70px; animation:ecIn .8s ease-out;
+  background:radial-gradient(ellipse at 50% 35%, #3a2a66, #0b0f1e 70%); }
+@keyframes ecIn { from { opacity:0; } }
+.ec-small { margin:0 0 18px; font-size:12px; letter-spacing:6px; color:#9aa6c4; }
+.endcard h2 { margin:0 0 26px; font-size:36px; line-height:1.3; letter-spacing:-1.5px; animation:up .9s .3s both; }
+.endcard h2 em { font-style:normal; background:linear-gradient(100deg,#ff7ac8,#ffc27a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.ec-help { margin:0 0 20px; font-size:14px; line-height:1.9; color:#cfd6ee; animation:up .9s .8s both; } .ec-help b { color:#fff; }
+.ec-ai { margin:0; font-size:10.5px; color:#7f8aa8; animation:up .9s 1.2s both; }
+
+/* ===== 녹화 모드(body.rec) 연출 강화 ===== */
+.grain, .vignette, .stinger { display:none; }
+body.rec .grain, body.rec .vignette, body.rec .stinger { display:block; position:absolute; pointer-events:none; }
+body.rec .grain { inset:-20px; z-index:58; opacity:.1; mix-blend-mode:overlay; animation:grain .6s steps(4) infinite;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+@keyframes grain { 25% { transform:translate(-8px,6px); } 50% { transform:translate(7px,-9px); } 75% { transform:translate(-5px,-4px); } }
+body.rec .vignette { inset:0; z-index:57; background:radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,.62)); opacity:calc(.95 - var(--light,0) * .6); }
+body.rec .stinger { left:0; right:0; top:34%; z-index:35; text-align:center; font-size:58px; font-weight:900; letter-spacing:6px; color:#fff; opacity:0; text-shadow:0 0 34px rgba(114,217,232,.7), 3px 0 rgba(255,45,85,.6), -3px 0 rgba(0,229,255,.6); }
+.stinger.on { animation:sting 1.1s ease-out; }
+@keyframes sting { 0% { opacity:0; transform:scale(1.35); filter:blur(12px); } 22% { opacity:1; transform:scale(1); filter:none; } 68% { opacity:1; } 100% { opacity:0; transform:scale(.96); } }
+body.rec .m-rain { opacity:calc(1.5 - var(--light,0) * 2); }
+body.rec .views { font-size:14px; } body.rec .views b { font-size:19px; text-shadow:0 0 14px rgba(255,93,115,.8); }
+body.rec .chat-area .msg { animation:popStrong .38s cubic-bezier(.2,1.7,.4,1); }
+@keyframes popStrong { from { opacity:0; transform:translateY(16px) scale(.6); } }
+body.rec .chat-bubble.other { box-shadow:0 0 16px rgba(114,217,232,.2); }
+#flash.gold { animation:fl .8s; background:radial-gradient(circle at 50% 72%, rgba(255,214,140,.6), transparent 66%); }
+.hit .story-card, .hit .scene-banner { animation:glitchHit .6s steps(2); }
+@keyframes glitchHit { 0%,100% { filter:none; transform:none; } 20% { filter:drop-shadow(5px 0 rgba(255,0,60,.85)) drop-shadow(-5px 0 rgba(0,229,255,.85)); transform:translateX(-6px); }
+  45% { filter:drop-shadow(-6px 0 rgba(255,0,60,.85)) drop-shadow(6px 0 rgba(0,229,255,.85)); transform:translateX(7px) skewX(3deg); } 70% { filter:drop-shadow(3px 0 rgba(255,0,60,.7)) drop-shadow(-3px 0 rgba(0,229,255,.7)); transform:translateX(-3px); } }
+.cs-phone.glitchy { animation:glitchHit .6s steps(2); }
+.choice-btn.pressed { transform:scale(.97); border-color:#fff; background:rgba(114,217,232,.24); box-shadow:0 0 26px rgba(114,217,232,.65); }
+.touch { position:absolute; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; background:rgba(255,255,255,.3); border:2px solid rgba(255,255,255,.85); z-index:60; pointer-events:none; animation:touch .75s ease-out both; }
+@keyframes touch { 0% { transform:scale(1.7); opacity:0; } 30% { transform:scale(1); opacity:1; } 100% { transform:scale(1.5); opacity:0; } }
+.star { position:absolute; bottom:-20px; z-index:55; pointer-events:none; color:#ffe9a8; text-shadow:0 0 12px #ffd27a; animation:starUp 2s ease-out both; }
+@keyframes starUp { from { transform:translateY(0) rotate(0); opacity:0; } 15% { opacity:1; } to { transform:translateY(-640px) rotate(200deg); opacity:0; } }
+.shoot { position:absolute; top:12%; left:-10%; width:130px; height:3px; z-index:50; pointer-events:none; border-radius:3px; background:linear-gradient(90deg, transparent, #fff); transform:rotate(24deg); animation:shoot 1.1s ease-in both; }
+@keyframes shoot { from { transform:translate(0,0) rotate(24deg); opacity:1; } to { transform:translate(620px,280px) rotate(24deg); opacity:0; } }
+.spike { position:absolute; right:22px; top:112px; z-index:56; pointer-events:none; font-size:26px; font-weight:900; color:#ff5d73; text-shadow:0 0 16px rgba(255,60,90,.8); animation:spikeUp 1.2s ease-out both; }
+@keyframes spikeUp { from { transform:translateY(14px) scale(.6); opacity:0; } 20% { opacity:1; transform:scale(1.2); } to { transform:translateY(-46px); opacity:0; } }
+/* 녹화 시작 직후 로비: 번개, 글리치, 알림이 빠르게 */
+.intro-screen.burst .start-btn, .intro-screen.burst .intro-hint { opacity:0; transition:opacity .3s; pointer-events:none; }
+.intro-screen.burst .intro-flash { animation:boltBurst 1.3s both; }
+@keyframes boltBurst { 0% { opacity:0; } 8% { opacity:.95; } 18% { opacity:0; } 32% { opacity:.65; } 50% { opacity:0; } 70% { opacity:.4; } 100% { opacity:0; } }
+.intro-screen.burst .intro-title em::before { animation:glA .9s 2; } .intro-screen.burst .intro-title em::after { animation:glB .9s 2; }
+.intro-screen.burst .toast { animation:bannerQuick 1.5s both; } .intro-screen.burst .t1 { animation-delay:.1s; } .intro-screen.burst .t2 { animation-delay:.85s; } .intro-screen.burst .t3 { animation-delay:1.6s; }
+@keyframes bannerQuick { 0% { opacity:0; transform:translateY(-130%); } 12%,58% { opacity:1; transform:none; } 78%,100% { opacity:0; transform:translateY(-130%); } }
+
+/* ===== 팀명 RE:PLY (Reply ↔ Replay) ===== */
+.mid { display:inline-block; overflow:hidden; max-width:0; opacity:0; vertical-align:bottom; animation:midA 2.4s ease-in-out infinite; }
+@keyframes midA { 0%,36% { max-width:0; opacity:0; } 44%,66% { max-width:1.1ch; opacity:1; color:#72d9e8; text-shadow:0 0 12px #72d9e8; } 76%,100% { max-width:0; opacity:0; } }
+.team { margin:0 0 24px; display:flex; flex-direction:column; align-items:center; gap:6px; animation:up .9s 1.4s both; }
+.team small { font-size:11px; letter-spacing:7px; color:#9aa6c4; }
+.team-name { font:900 46px/1.1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing:3px; color:#fff; text-shadow:3px 0 rgba(255,45,85,.55), -3px 0 rgba(0,229,255,.55), 0 0 30px rgba(167,139,250,.6); }
+.team .team-sub { letter-spacing:.5px; font-size:12px; color:#cfd6ee; margin-top:4px; }
+.endcard .ec-help { animation-delay:2s; } .endcard .ec-ai { animation-delay:2.4s; }
+.team-tag { display:none; }
+body.rec .team-tag { display:block; position:absolute; left:0; right:0; bottom:92px; z-index:4; text-align:center; font:700 12px/1 ui-monospace, Menlo, monospace; letter-spacing:5px; color:#9aa6c4; opacity:0; transition:opacity .6s; }
+body.rec .team-tag b { color:#fff; font-size:15px; letter-spacing:3px; text-shadow:2px 0 rgba(255,45,85,.6), -2px 0 rgba(0,229,255,.6); }
+body.rec .intro-screen.burst .team-tag { opacity:1; transition-delay:.5s; }
+
+/* ===== 팀명 RTR (REPLY TO RESCUE) ===== */
+.team-name { font-size:60px; letter-spacing:12px; padding-left:12px; }
+.team .team-sub { font-size:14px; letter-spacing:3px; color:#cfd6ee; animation:expandSub 1s 1.7s both; margin-top:6px; }
+.team .team-sub b { color:#72d9e8; font-size:19px; text-shadow:0 0 14px #72d9e8; animation:glowI 1.4s 2.2s infinite alternate; }
+.team .team-ko { font-size:13px; letter-spacing:0; color:#ffc2e3; animation:up .9s 2.3s both; margin-top:2px; }
+@keyframes expandSub { from { opacity:0; letter-spacing:14px; } }
+@keyframes glowI { to { text-shadow:0 0 24px #72d9e8, 0 0 6px #fff; } }
+.endcard .ec-help { animation-delay:2.9s; } .endcard .ec-ai { animation-delay:3.3s; }
+body.rec .team-tag b { letter-spacing:6px; font-size:17px; }

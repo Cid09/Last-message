@@ -13,7 +13,12 @@ const introScreen = $("introScreen"), storyScreen = $("storyScreen"),
       endingScreen = $("endingScreen"), creditsScreen = $("creditsScreen");
 
 const TIME_LIMIT = 6000;      // 장면당 제한 시간 (4장면 → 50초 이내)
-const FEEDBACK_MS = 1700;     // 선택 후 자동 진행 대기
+const REC = new URLSearchParams(location.search).has("rec");   // 녹화 모드: 주소 뒤에 ?rec=1
+const AUTO = REC && !new URLSearchParams(location.search).has("manual");   // 녹화 모드는 자동 진행(수동: &manual=1)
+if (REC) document.body.classList.add("rec");
+const PACE = REC ? .5 : 1;                                     // 녹화 모드는 대사 진행을 빠르게
+let recSecond = false, recSnap = null;
+const FEEDBACK_MS = 1700 * (REC ? .6 : 1);     // 선택 후 자동 진행 대기
 
 let lightAdj = 0, history = [], flags, sceneIndex, runId = 0, views, viewTick, timerTick, sceneStart,
     gameStart, reactions, lastSec, locked;
@@ -171,6 +176,67 @@ const bgm = (() => {
     }
   };
 })();
+function noise(dur, type, f0, f1, vol) {
+  try {
+    const a = getAC(), n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+    src.buffer = buf; f.type = type; f.frequency.setValueAtTime(f0, a.currentTime); f.frequency.exponentialRampToValueAtTime(f1, a.currentTime + dur);
+    g.gain.value = vol; src.connect(f); f.connect(g); g.connect(a.destination); src.start();
+  } catch (e) {}
+}
+const thunder = () => { if (!bgm.muted()) noise(1.6, "lowpass", 420, 60, .9); };
+const whoosh = () => { if (!bgm.muted()) noise(.45, "bandpass", 300, 3500, .3); };
+function thump(t = 0) {
+  setTimeout(() => {
+    if (bgm.muted()) return;
+    try { const a = getAC(), o = a.createOscillator(), g = a.createGain();
+      o.frequency.setValueAtTime(70, a.currentTime); o.frequency.exponentialRampToValueAtTime(35, a.currentTime + .2);
+      g.gain.setValueAtTime(.7, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + .25);
+      o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + .3); } catch (e) {}
+  }, t);
+}
+function stars(n = 16) {
+  const sh = document.querySelector(".game-shell");
+  for (let i = 0; i < n; i++) {
+    const e = document.createElement("i"); e.className = "star"; e.textContent = "★";
+    e.style.left = Math.random() * 100 + "%"; e.style.fontSize = 8 + Math.random() * 14 + "px";
+    e.style.animationDelay = Math.random() * .5 + "s"; e.style.animationDuration = 1.6 + Math.random() * 1.2 + "s";
+    sh.appendChild(e); setTimeout(() => e.remove(), 3600);
+  }
+}
+function shoot(parent) { const e = document.createElement("i"); e.className = "shoot"; parent.appendChild(e); setTimeout(() => e.remove(), 1500); }
+function spike(t) {
+  const e = document.createElement("i"); e.className = "spike"; e.textContent = t;
+  document.querySelector(".game-shell").appendChild(e); setTimeout(() => e.remove(), 1300);
+}
+function touchAt(btn) {
+  const sh = document.querySelector(".game-shell"), sr = sh.getBoundingClientRect(), br = btn.getBoundingClientRect(), sc = sr.width / sh.offsetWidth;
+  const e = document.createElement("i"); e.className = "touch";
+  e.style.left = (br.left - sr.left + br.width * .8) / sc + "px"; e.style.top = (br.top - sr.top + br.height / 2) / sc + "px";
+  sh.appendChild(e); setTimeout(() => e.remove(), 800);
+}
+/* 화면 녹화(PC 브라우저): 시작 버튼 → 녹화 시작, 엔딩 카드 후 자동 저장. 아이패드/폰 브라우저는 지원 안 함(시스템 화면 기록 사용) */
+let recorder = null, recChunks = [], recStream = null;
+async function recBegin() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || !window.MediaRecorder) return false;
+  try {
+    recStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 60 }, audio: true, preferCurrentTab: true, selfBrowserSurface: "include" });
+    const vt = recStream.getVideoTracks()[0];
+    if (window.CropTarget && vt.cropTo) { try { await vt.cropTo(await CropTarget.fromElement($("stage"))); } catch (e) {} }
+    const mime = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"].find(t => MediaRecorder.isTypeSupported(t)) || "";
+    recorder = new MediaRecorder(recStream, mime ? { mimeType: mime, videoBitsPerSecond: 12e6 } : {});
+    recChunks = []; recorder.ondataavailable = (e) => { e.data.size && recChunks.push(e.data); };
+    recorder.onstop = () => {
+      const type = recorder.mimeType || "video/webm", a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob(recChunks, { type })); a.download = "마지막메시지_쇼츠." + (type.includes("mp4") ? "mp4" : "webm");
+      document.body.appendChild(a); a.click(); a.remove(); recStream.getTracks().forEach(t => t.stop());
+    };
+    recorder.start(250); return true;
+  } catch (e) { return false; }
+}
+function recEnd() { if (recorder && recorder.state !== "inactive") recorder.stop(); }
+
 document.addEventListener("visibilitychange", () => { if (ac) document.hidden ? ac.suspend() : ac.resume(); });
 $("muteBtn").addEventListener("click", () => bgm.toggle());
 $("fitBtn").addEventListener("click", () => { wideMode = !wideMode; try { localStorage.setItem("wide", wideMode ? "1" : "0"); } catch (e) {} fit(); });
@@ -187,7 +253,7 @@ function shake() {
 }
 function setLight(v) { bgm.setLight(v); document.documentElement.style.setProperty("--light", v); }
 const val = (v) => (typeof v === "function" ? v(flags) : v);
-const wait = (ms) => new Promise(r => setTimeout(r, ms));
+const wait = (ms) => new Promise(r => setTimeout(r, ms * PACE));
 
 /* ---------- 조회수 ---------- */
 function setViews(v) {
@@ -195,7 +261,7 @@ function setViews(v) {
   $("viewCount").textContent = views.toLocaleString();
 }
 function bumpViews(delta) {
-  setViews(views + delta);
+  setViews(views + delta); if (REC && delta > 250) spike("+" + delta);
   const el = $("viewCount").parentElement;
   el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse");
 }
@@ -215,6 +281,7 @@ function show(screen) {
 function stopAll() { clearInterval(viewTick); clearInterval(timerTick); runId++; }
 
 function startGame() {
+  recSecond = false; recSnap = null; $("endCard").className = "endcard hidden"; $("rewind").className = "rewind hidden";
   bgm.start(); bgm.restore();
   stopAll();
   csTimers.forEach(clearTimeout); $("cutscene").classList.add("hidden");
@@ -278,8 +345,9 @@ function addMsg(chat, name, message, opt = {}) {
   chat.appendChild(row); lastSender = name; return row;
 }
 
-async function renderScene() {
+async function renderScene(fast = false) {
   const id = ++runId, scene = scenes[sceneIndex];
+  if (REC && !fast && sceneIndex === scenes.length - 1) recSnap = { views, flags: { ...flags }, lightAdj, history: [...history] };
   locked = true;
   setLight(Math.max(0, Math.min(1, [0, .2, .4, .6, .85][sceneIndex] + lightAdj)));
   const card = document.querySelector(".story-card");
@@ -299,10 +367,12 @@ async function renderScene() {
   fill.style.transition = "none"; fill.style.width = "100%";
   const chat = $("chatArea"); chat.innerHTML = "";
   chat.classList.toggle("hidden", !chatArr);
-  flash("ping"); beep(660, .1, "triangle", .06);
+  flash("ping"); fast || beep(660, .1, "triangle", .06);
+  if (REC && !fast) { const st = $("stinger"); st.textContent = ["21:12", "21:40", "다음 날 아침", "방과 후", "다음 날 점심"][sceneIndex] || ""; st.classList.remove("on"); void st.offsetWidth; st.classList.add("on"); whoosh(); }
 
   // 타자 효과
-  for (let i = 1; i <= text.length; i++) {
+  if (fast) $("storyText").textContent = text;
+  else for (let i = 1; i <= text.length; i++) {
     $("storyText").textContent = text.slice(0, i);
     await wait(14); if (id !== runId) return;
   }
@@ -310,16 +380,17 @@ async function renderScene() {
   lastSender = null; chatArr && setHead(scene); $("chatHead").classList.toggle("hidden", !chatArr);
   let mi = 0;
   for (const [name, message, react] of chatArr || []) {
+    if (fast) { addMsg(chat, name, message, { time: msgTime(scene, mi++), react }); continue; }
     if (name !== "나") {
       const tr = addTyping(chat, name); setSub(name + " 입력 중…");
       await wait(Math.min(650, 220 + message.length * 12)); if (id !== runId) return;
       tr.remove(); setSub(scene.room.sub);
     } else { await wait(350); if (id !== runId) return; }
     addMsg(chat, name, message, { time: msgTime(scene, mi++), react });
-    beep(name === "나" ? 520 : 880, .06, "sine", .04); vibrate(30);
+    beep(name === "나" ? 520 : 880, .06, "sine", .04); vibrate(30); REC && flash("ping");
     await wait(150); if (id !== runId) return;
   }
-  await wait(150); if (id !== runId) return;
+  if (!fast) { await wait(150); if (id !== runId) return; }
 
   scene.choices.forEach((choice, i) => {
     const btn = document.createElement("button");
@@ -333,7 +404,15 @@ async function renderScene() {
   startTimer(id);
 }
 
-function startTimer(id) { locked = false; sceneStart = performance.now(); }  // 시간제한 없음
+function startTimer(id) { locked = false; sceneStart = performance.now(); if (AUTO) autoPlay(id); }  // 시간제한 없음
+async function autoPlay(id) {
+  const k = recSecond ? 0 : [1, 1, 1, 0, 2][sceneIndex], d = recSecond ? 1100 : [1500, 1500, 1400, 1500, 1800][sceneIndex];
+  await new Promise(r => setTimeout(r, d)); if (id !== runId) return;
+  const btn = $("choices").children[k]; if (!btn) return;
+  touchAt(btn); btn.classList.add("pressed");
+  await new Promise(r => setTimeout(r, 320)); if (id !== runId) return;
+  choose(k, false);
+}
 
 function choose(i, timedOut) {
   if (locked) return; locked = true;
@@ -360,6 +439,10 @@ function choose(i, timedOut) {
 
   if (choice.bad || timedOut) { shake(); flash("alert"); beep(150, .25, "sawtooth", .06); vibrate([80, 40, 80]); }
   else { flash("good"); beep(990, .12, "sine", .06); }
+  if (REC) {
+    if (choice.bad) { thunder(); thump(0); thump(240); document.body.classList.remove("hit"); void document.body.offsetWidth; document.body.classList.add("hit"); setTimeout(() => document.body.classList.remove("hit"), 700); }
+    else if ((choice.set && choice.set.supported) || choice.ending === "good") { stars(14); flash("gold"); [784, 988, 1175].forEach((f, k) => setTimeout(() => beep(f, .25, "sine", .07), k * 90)); }
+  }
 
   (async () => {
     const chat = $("chatArea"), n = (val(scene.chat) || []).length;
@@ -388,8 +471,25 @@ let endTime;
 function showEnding(type) {
   clearInterval(viewTick); clearInterval(timerTick);
   endTime = performance.now();
+  if (REC) return type === "normal" ? recNext() : playCutscene(type, recNext);
   if (type === "normal") return revealEnding(type);
   playCutscene(type, () => revealEnding(type));
+}
+
+/* ---------- 녹화 모드: 첫 엔딩 → 되감기 → 5장면 다시 → 두 번째 엔딩 → 엔딩 카드 ---------- */
+function recNext() { if (!recSecond) { recSecond = true; rewind(); } else { $("endCard").className = "endcard"; stars(12); setTimeout(recEnd, 4800); } }
+function rewind() {
+  const rw = $("rewind"); rw.className = "rewind"; let n = 47; whoosh();
+  $("rwCount").textContent = "00:47";
+  const iv = setInterval(() => { n = Math.max(0, n - 4); $("rwCount").textContent = "00:" + String(n).padStart(2, "0"); }, 80);
+  for (let i = 0; i < 7; i++) setTimeout(() => beep(1000 - i * 120, .1, "sawtooth", .04), i * 110);
+  setTimeout(() => {
+    clearInterval(iv); $("cutscene").classList.add("hidden"); show(storyScreen);
+    if (recSnap) { setViews(recSnap.views); flags = recSnap.flags; lightAdj = recSnap.lightAdj; history = recSnap.history; }
+    sceneIndex = scenes.length - 1; startViewTick(); bgm.restore(); renderScene(true);
+  }, 1000);
+  setTimeout(() => rw.classList.add("out"), 1700);
+  setTimeout(() => { rw.className = "rewind hidden"; }, 2100);
 }
 
 /* ---------- 엔딩 컷씬 ---------- */
@@ -406,7 +506,7 @@ function playCutscene(type, done) {
     csTimers.forEach(clearTimeout); cs.classList.add("hidden"); done();
   };
   $("csSkip").onclick = finish;
-  const at = (ms, fn) => csTimers.push(setTimeout(() => { if (!finished) fn(); }, ms * .68));  // 쇼츠용 압축
+  const at = (ms, fn) => csTimers.push(setTimeout(() => { if (!finished) fn(); }, ms * (REC ? .5 : .68)));  // 쇼츠용 압축
   const caption = (t) => { cap.textContent = t; cap.className = "cs-caption"; void cap.offsetWidth; cap.className = "cs-caption on"; };
   const say = (who, msg, snd) => {
     const b = document.createElement("div");
@@ -427,6 +527,7 @@ function playCutscene(type, done) {
   const up = (f) => () => beep(f, .25, "sine", .06);
 
   setLight(type === "bad" ? .02 : .25);
+  if (REC && type === "bad") thunder();
   const typing = () => { const t = document.createElement("div"); t.className = "chat-bubble other typing"; t.innerHTML = "<i></i><i></i><i></i>"; log.appendChild(t); return t; };
   if (type === "bad") {
     $("csTitle").textContent = "단체방 · 99+";
@@ -437,8 +538,9 @@ function playCutscene(type, done) {
     at(3700, () => say("서연", "…괜찮아. 신경 쓰지 마.", down));
     at(4800, () => say("sys", "읽음 · 답장 없음", down));
     let tp;
-    at(5800, () => { tp = typing(); $("csTitle").textContent = "서연 · 입력 중…"; });
-    at(7600, () => { tp && tp.remove(); $("csTitle").textContent = "서연"; bgm.hush(); say("sys", "서연님이 채팅방을 나갔습니다.", down); });
+    at(5800, () => { tp = typing(); $("csTitle").textContent = "서연 · 입력 중…"; REC && (thump(0), thump(260)); });
+    at(6700, () => { REC && (thump(0), thump(260)); });
+    at(7600, () => { tp && tp.remove(); $("csTitle").textContent = "서연"; bgm.hush(); say("sys", "서연님이 채팅방을 나갔습니다.", down); if (REC) { phone.classList.add("glitchy"); thump(0); } });
     at(8700, () => caption("마지막 메시지는, 끝내 도착하지 않았다."));
     at(10300, () => $("csFade").className = "cs-fade on");
     at(11200, finish);
@@ -449,7 +551,7 @@ function playCutscene(type, done) {
     at(1700, () => say("서연", "선생님이 다 처리해 주셨어.", ping));
     at(2800, () => say("서연", "있잖아, 그날 내가 했던 별 얘기.", ping));
     at(3900, () => say("서연", "다시 해보고 싶어. 맨 앞에서 들어줄래?", up(784)));
-    at(4800, () => { cs.classList.add("sunrise"); setLight(1); bgm.melody(); });
+    at(4800, () => { cs.classList.add("sunrise"); setLight(1); bgm.melody(); if (REC) { stars(26); shoot(cs); [784, 988, 1175, 1568].forEach((f, k) => setTimeout(() => beep(f, .35, "sine", .07), k * 120)); } });
     at(5300, () => say("나", "응. 제일 앞에서 들을게.", ping));
     at(6500, () => say("서연", "내일 봐. 😊", up(988)));
     at(7400, () => caption("마지막 메시지는, 첫 인사가 되었다."));
@@ -493,7 +595,15 @@ function revealEnding(type) {
   beep(type === "good" ? 880 : 220, .4, "sine", .06);
 }
 
-$("startBtn").addEventListener("click", startGame);
+$("startBtn").addEventListener("click", async () => {
+  if (!REC) return startGame();
+  $("startBtn").disabled = true; getAC();
+  const ok = await recBegin();                       // 지원 브라우저면 여기서 화면 녹화 시작
+  introScreen.classList.add("burst"); bgm.start(); thunder();
+  setTimeout(startGame, ok ? 2500 : 2400);            // 로비 연출을 영상에 담은 뒤 자동 시작
+});
 $("restartBtn").addEventListener("click", startGame);
 $("creditsBtn").addEventListener("click", () => show(creditsScreen));
-$("homeBtn").addEventListener("click", () => { stopAll(); $("chapter").textContent = "PROLOGUE · 01"; setLight(0); show(introScreen); });
+$("homeBtn").addEventListener("click", () => { stopAll(); $("chapter").textContent = "PROLOGUE · 01"; setLight(0); introScreen.classList.remove("burst"); $("startBtn").disabled = false; show(introScreen); });
+
+if (REC) $("startBtn").textContent = "● 녹화 시작";

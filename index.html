@@ -11,6 +11,7 @@
   <div id="stage">
   <main class="game-shell">
     <div id="flash"></div>
+    <div class="stinger" id="stinger"></div><div class="vignette"></div><div class="grain"></div>
     <div class="mood"><i class="m-glow"></i><i class="m-motes"></i><i class="m-rain"></i></div>
     <header class="topbar">
       <div class="brand"><span class="brand-mark">✉</span><span>LAST MESSAGE</span></div>
@@ -31,6 +32,7 @@
         <button class="start-btn" id="startBtn">▶ 게임 시작</button>
         <p class="intro-hint">🔊 소리를 켜고 플레이하세요 · 약 50초</p>
       </div>
+      <div class="team-tag">TEAM <b>RTR</b> · REPLY TO RESCUE</div>
       <div class="intro-rain"></div><div class="intro-flash"></div>
     </section>
 
@@ -94,6 +96,14 @@
       <div class="cs-fade" id="csFade"></div>
       <button class="cs-skip" id="csSkip">SKIP ›</button>
     </section>
+    <div class="rewind hidden" id="rewind"><div class="rw-noise"></div><div class="rw-label">◀◀ REWIND</div><div class="rw-count" id="rwCount">00:47</div><p class="rw-cap">같은 순간, 다른 선택.</p></div>
+    <div class="endcard hidden" id="endCard">
+      <p class="ec-small">마지막 메시지</p>
+      <h2>당신의 선택이<br>누군가의 하루를<br><em>바꿉니다.</em></h2>
+      <div class="team"><small>TEAM</small><div class="team-name">RTR</div><small class="team-sub"><b>R</b>EPLY <b>T</b>O <b>R</b>ESCUE</small><small class="team-ko">답장 한 줄이, 누군가를 구합니다.</small></div>
+      <p class="ec-help">도움이 필요하다면<br><b>학교폭력 신고 117</b> · <b>청소년상담 1388</b></p>
+      <p class="ec-ai">본 작품의 일부 이미지와 코드는 AI 도구의 도움을 받아 제작되었습니다.</p>
+    </div>
   </main>
   </div>
   <script src="script.js"></script>
