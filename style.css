@@ -451,3 +451,5 @@ body.rec .intro-screen.burst .team-tag { opacity:1; transition-delay:.5s; }
 @keyframes glowI { to { text-shadow:0 0 24px #72d9e8, 0 0 6px #fff; } }
 .endcard .ec-help { animation-delay:2.9s; } .endcard .ec-ai { animation-delay:3.3s; }
 body.rec .team-tag b { letter-spacing:6px; font-size:17px; }
+
+body.rec .cs-skip { display:none !important; }
