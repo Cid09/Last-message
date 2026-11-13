@@ -453,3 +453,11 @@ body.rec .intro-screen.burst .team-tag { opacity:1; transition-delay:.5s; }
 body.rec .team-tag b { letter-spacing:6px; font-size:17px; }
 
 body.rec .cs-skip { display:none !important; }
+
+/* ===== 오프닝 한 줄 문제 제기 (녹화 모드 전용) ===== */
+.intro-hook { display:none; }
+body.rec .intro-hook { display:block; position:absolute; left:0; right:0; top:262px; z-index:4; text-align:center; padding:26px 20px 22px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(11,15,30,0), rgba(11,15,30,.82) 38%, rgba(11,15,30,.82) 70%, rgba(11,15,30,0)); animation:hookIn .9s .05s both; }
+body.rec .intro-hook strong { display:block; font-size:25px; letter-spacing:-1px; color:#fff; text-shadow:0 2px 18px rgba(0,0,0,.8), 2px 0 rgba(255,45,85,.5), -2px 0 rgba(0,229,255,.5); }
+body.rec .intro-hook small { display:block; margin-top:7px; font-size:12.5px; color:#ffc2e3; letter-spacing:0; }
+@keyframes hookIn { from { opacity:0; transform:translateY(8px); } }
