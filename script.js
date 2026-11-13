@@ -16,7 +16,7 @@ const TIME_LIMIT = 6000;      // 장면당 제한 시간 (4장면 → 50초 이�
 const REC = new URLSearchParams(location.search).has("rec");   // 녹화 모드: 주소 뒤에 ?rec=1
 const AUTO = REC && !new URLSearchParams(location.search).has("manual");   // 녹화 모드는 자동 진행(수동: &manual=1)
 if (REC) document.body.classList.add("rec");
-const PACE = REC ? .5 : 1;                                     // 녹화 모드는 대사 진행을 빠르게
+const PACE = REC ? .68 : 1;                                   // 녹화 모드는 대사 진행을 빠르게
 let recSecond = false, recSnap = null;
 const FEEDBACK_MS = 1700 * (REC ? .6 : 1);     // 선택 후 자동 진행 대기
 
